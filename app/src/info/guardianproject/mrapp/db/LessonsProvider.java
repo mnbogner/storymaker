@@ -1,5 +1,8 @@
 package info.guardianproject.mrapp.db;
 
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+import info.guardianproject.mrapp.StoryMakerApp;
 import net.sqlcipher.database.SQLiteQueryBuilder;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
@@ -7,16 +10,24 @@ import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 
-public class LessonsProvider extends ContentProvider {
+public class LessonsProvider extends ContentProvider implements ICacheWordSubscriber {
   
 	private StoryMakerDB mDB;
 	
     private String mPassphrase = null; //how and when do we set this??
-    		
+    
+    // NEW/CACHEWORD
+    CacheWordHandler mCacheWordHandler;
+    
     @Override
     public boolean onCreate() {
-        mDB = new StoryMakerDB(getContext());
+        // NEW/CACHEWORD
+        mCacheWordHandler = new CacheWordHandler(getContext(), this, ((StoryMakerApp)getContext().getApplicationContext()).getCacheWordSettings());
+        mCacheWordHandler.connectToService();
+        mDB = new StoryMakerDB(mCacheWordHandler, getContext()); 
+        
         return true;
     }
     
@@ -86,4 +97,31 @@ public class LessonsProvider extends ContentProvider {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	// NEW/CACHEWORD
+    @Override
+    public void onCacheWordUninitialized() {
+        // lock
+        Log.d("CACHEWORD", "LessonsProvider - UNINITIALIZED/LOCK!");
+        if (mDB != null)
+            mDB.close();
+        mDB = null;
+        Log.d("CACHEWORD", "LessonsProvider - UNINITIALIZED/LOCK! -> DONE");
+    }
+    @Override
+    public void onCacheWordLocked() {
+        // lock
+        Log.d("CACHEWORD", "LessonsProvider - LOCKED/LOCK!");
+        if (mDB != null)
+            mDB.close();
+        mDB = null;
+        Log.d("CACHEWORD", "LessonsProvider - LOCKED/LOCK! -> DONE");
+    }
+    @Override
+    public void onCacheWordOpened() {
+        // unlock
+        Log.d("CACHEWORD", "LessonsProvider - OPENED/UNLOCK!");
+        mDB = new StoryMakerDB(mCacheWordHandler, getContext()); 
+        Log.d("CACHEWORD", "LessonsProvider - OPENED/UNLOCK! -> DONE");
+    }
 }

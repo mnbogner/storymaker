@@ -1,5 +1,6 @@
 package info.guardianproject.mrapp;
 
+import info.guardianproject.cacheword.CacheWordSettings;
 import info.guardianproject.mrapp.lessons.LessonManager;
 import info.guardianproject.mrapp.media.MediaProjectManager;
 import info.guardianproject.mrapp.server.ServerManager;
@@ -15,11 +16,12 @@ import java.util.StringTokenizer;
 //import com.google.analytics.tracking.android.GoogleAnalytics;
 
 import net.sqlcipher.database.SQLiteDatabase;
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.app.Application;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Environment;
@@ -42,6 +44,9 @@ public class StoryMakerApp extends Application {
 	private final static String URL_PATH_LESSONS = "/appdata/lessons/";
 	private final static String STORYMAKER_DEFAULT_SERVER_URL = "https://storymaker.cc";
 	private static String mBaseUrl = null;
+	
+	// NEW/CACHEWORD
+    private CacheWordSettings mCacheWordSettings;
 	
 	 public void InitializeSQLCipher(String dbName, String passphrase) {
 	        	      
@@ -71,9 +76,18 @@ public class StoryMakerApp extends Application {
 //		optOut = !(prefsAnalytics.getBoolean(Globals.PREFERENCE_ANALYTICS_OPTIN, false));
 //		GoogleAnalytics.getInstance(this).setAppOptOut(optOut);
 		
+		// NEW/CACHEWORD
+        mCacheWordSettings = new CacheWordSettings(getApplicationContext());
+        mCacheWordSettings.setNotificationIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(this, BaseActivity.class), Intent.FLAG_ACTIVITY_NEW_TASK ));
+		
 		initApp();
 		 
 	}
+	
+	// NEW/CACHEWORD
+    public CacheWordSettings getCacheWordSettings() {
+        return mCacheWordSettings;
+    }
 	
 	private void initApp ()
 	{

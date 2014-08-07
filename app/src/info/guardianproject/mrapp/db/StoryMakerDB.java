@@ -2,23 +2,26 @@ package info.guardianproject.mrapp.db;
 
 import java.util.ArrayList;
 
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.SQLCipherOpenHelper;
 import info.guardianproject.mrapp.model.Auth;
 import info.guardianproject.mrapp.model.Project;
 import info.guardianproject.mrapp.model.Scene;
 import info.guardianproject.mrapp.model.SceneTable;
 import net.sqlcipher.database.SQLiteDatabase;
-import net.sqlcipher.database.SQLiteOpenHelper;
 import android.content.Context;
 import android.util.Log;
 
-public class StoryMakerDB extends SQLiteOpenHelper {
+public class StoryMakerDB extends SQLCipherOpenHelper {
     private static final String TAG = "StoryMakerDB";
     private static final int DB_VERSION = 7;
     private static final String DB_NAME = "sm.db";
     private Context mContext;
     
-    public StoryMakerDB(Context context) {
-        super(context, DB_NAME, null, DB_VERSION);
+    // NEW/CACHEWORD
+    // now extends SQLCipherOpenHelper, which checks cacheword state before allowing database access
+    public StoryMakerDB(CacheWordHandler cacheWordHandler, Context context) {
+        super(cacheWordHandler, context, DB_NAME, null, DB_VERSION);
         mContext = context;
     }
     

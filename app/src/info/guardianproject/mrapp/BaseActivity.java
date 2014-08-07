@@ -1,4 +1,5 @@
 package info.guardianproject.mrapp;
+
 import info.guardianproject.mrapp.server.LoginActivity;
 
 import java.io.IOException;
@@ -24,9 +25,16 @@ import android.widget.ImageView;
 import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.SlidingMenu.OnClosedListener;
 
-public class BaseActivity extends Activity {
+// NEW/CACHEWORD
+import info.guardianproject.cacheword.CacheWordActivityHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+
+public class BaseActivity extends Activity implements ICacheWordSubscriber {
 
 	public SlidingMenu mSlidingMenu;
+		
+	// NEW/CACHEWORD
+    private CacheWordActivityHandler mCacheWordHandler;
 
 	@Override
 	public void onStart() {
@@ -39,6 +47,40 @@ public class BaseActivity extends Activity {
 		super.onStop();
 //		EasyTracker.getInstance(this).activityStop(this);
 	}
+	
+	// NEW/CACHEWORD
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mCacheWordHandler.onPause();
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mCacheWordHandler.onResume();
+    }
+    @Override
+    public void onCacheWordUninitialized() {
+        showLockScreen();
+    }
+    @Override
+    public void onCacheWordLocked() {
+        showLockScreen();
+        // lock db? -> provider classes need to implement ICacheWordSubscriber and handle db
+    }
+    @Override
+    public void onCacheWordOpened() {
+        // unlock db? -> provider classes need to implement ICacheWordSubscriber and handle db
+    }
+    
+    // NEW/CACHEWORD
+    void showLockScreen() {
+        Intent intent = new Intent(this, CacheWordActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("originalIntent", getIntent());
+        startActivity(intent);
+        finish();
+    }
 
     public void initSlidingMenu ()
     {
@@ -74,9 +116,10 @@ public class BaseActivity extends Activity {
         Button btnDrawerLessons = (Button) findViewById(R.id.btnDrawerLessons);
         Button btnDrawerAccount = (Button) findViewById(R.id.btnDrawerAccount);
         Button btnDrawerSettings = (Button) findViewById(R.id.btnDrawerSettings);
-        
 
-       
+        // NEW/CACHEWORD
+        Button btnDrawerLock = (Button) findViewById(R.id.btnDrawerLock);
+
         btnDrawerQuickCaptureVideo.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -168,14 +211,20 @@ public class BaseActivity extends Activity {
         btnDrawerSettings.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-            	mSlidingMenu.showContent(true);
 
+            	mSlidingMenu.showContent(true);
                 Intent i = new Intent(activity, SimplePreferences.class);
                 activity.startActivity(i);
             }
         });
         
-        
+        // NEW/CACHEWORD
+        btnDrawerLock.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCacheWordHandler.manuallyLock();
+            }
+        }); 
     }
     
     @Override
@@ -184,6 +233,9 @@ public class BaseActivity extends Activity {
     	super.onCreate(savedInstanceState);
         
         (new Eula(this)).show();
+        
+        // NEW/CACHEWORD
+        mCacheWordHandler = new CacheWordActivityHandler(this, ((StoryMakerApp)getApplication()).getCacheWordSettings());
     }
     
     @Override

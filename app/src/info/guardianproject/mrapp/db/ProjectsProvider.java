@@ -1,27 +1,26 @@
 package info.guardianproject.mrapp.db;
 
-import info.guardianproject.mrapp.model.Auth;
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+import info.guardianproject.mrapp.StoryMakerApp;
 import info.guardianproject.mrapp.model.AuthTable;
 import info.guardianproject.mrapp.model.LessonTable;
 import info.guardianproject.mrapp.model.MediaTable;
-import info.guardianproject.mrapp.model.Project;
 import info.guardianproject.mrapp.model.ProjectTable;
-import info.guardianproject.mrapp.model.Scene;
-import info.guardianproject.mrapp.model.Media;
-import info.guardianproject.mrapp.model.Lesson;
+
 import info.guardianproject.mrapp.model.SceneTable;
 import info.guardianproject.mrapp.model.TagTable;
 import net.sqlcipher.database.SQLiteDatabase;
-import net.sqlcipher.database.SQLiteQueryBuilder;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 
 // FIXME rename this to SMProvier and get rid of LessonsProvider
-public class ProjectsProvider extends ContentProvider {  
+public class ProjectsProvider extends ContentProvider implements ICacheWordSubscriber {  
 	private StoryMakerDB mDBHelper;
 	private SQLiteDatabase mDB = null;
     private String mPassphrase = "foo"; //how and when do we set this??
@@ -88,6 +87,9 @@ public class ProjectsProvider extends ContentProvider {
     private static final UriMatcher sURIMatcher = new UriMatcher(
             UriMatcher.NO_MATCH);
     
+    // NEW/CACHEWORD
+    CacheWordHandler mCacheWordHandler;
+    
     static {
         sURIMatcher.addURI(AUTHORITY, PROJECTS_BASE_PATH, PROJECTS);
         sURIMatcher.addURI(AUTHORITY, PROJECTS_BASE_PATH + "/#", PROJECT_ID);
@@ -107,7 +109,11 @@ public class ProjectsProvider extends ContentProvider {
     
     @Override
     public boolean onCreate() {
-        mDBHelper = new StoryMakerDB(getContext()); 
+        // NEW/CACHEWORD
+        mCacheWordHandler = new CacheWordHandler(getContext(), this, ((StoryMakerApp)getContext().getApplicationContext()).getCacheWordSettings());
+        mCacheWordHandler.connectToService();
+        mDBHelper = new StoryMakerDB(mCacheWordHandler, getContext()); 
+        
         return true;
     }
     
@@ -240,6 +246,40 @@ public class ProjectsProvider extends ContentProvider {
         default:
             throw new IllegalArgumentException("Unknown URI");
         }
+    }
+
+    // NEW/CACHEWORD
+    @Override
+    public void onCacheWordUninitialized() {
+        // lock
+        Log.d("CACHEWORD", "ProjectsProvider - UNINITIALIZED/LOCK!");
+        if (mDBHelper != null)
+            mDBHelper.close();
+        if (mDB != null)
+            mDB.close();
+        mDBHelper = null;
+        mDB = null;
+        Log.d("CACHEWORD", "ProjectsProvider - UNINITIALIZED/LOCK! -> DONE");
+    }
+    @Override
+    public void onCacheWordLocked() {
+        // lock
+        Log.d("CACHEWORD", "ProjectsProvider - LOCKED/LOCK!");
+        if (mDBHelper != null)
+            mDBHelper.close();
+        if (mDB != null)
+            mDB.close();
+        mDBHelper = null;
+        mDB = null;
+        Log.d("CACHEWORD", "ProjectsProvider - LOCKED/LOCK! -> DONE");
+    }
+    @Override
+    public void onCacheWordOpened() {
+        // unlock
+        Log.d("CACHEWORD", "ProjectsProvider - OPENED/UNLOCK!");
+        mDBHelper = new StoryMakerDB(mCacheWordHandler, getContext());
+        mDB = mDBHelper.getWritableDatabase(mPassphrase);
+        Log.d("CACHEWORD", "ProjectsProvider - OPENED/UNLOCK! -> DONE");
     }
     
     /*
