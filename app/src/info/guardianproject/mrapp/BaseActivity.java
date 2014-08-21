@@ -4,12 +4,14 @@ import info.guardianproject.mrapp.server.LoginActivity;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.GeneralSecurityException;
 import java.util.Date;
 
 import org.holoeverywhere.app.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -61,7 +63,14 @@ public class BaseActivity extends Activity implements ICacheWordSubscriber {
     }
     @Override
     public void onCacheWordUninitialized() {
-        showLockScreen();
+        // showLockScreen();   
+        // SET PIN BY DEFAULT, CLEAR AND PROMPT ON FIRST LOCK
+        try {
+            mCacheWordHandler.setPassphrase("1111".toCharArray());
+        } catch (GeneralSecurityException e) {
+            // TODO implement try again and wipe if fail
+            Log.e("CACHEWORD", "FAILED TO SET DEFAULT PIN: " + e.getMessage());
+        }
     }
     @Override
     public void onCacheWordLocked() {

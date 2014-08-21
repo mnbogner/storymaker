@@ -1,11 +1,15 @@
 package info.guardianproject.mrapp;
 
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 import info.guardianproject.cacheword.CacheWordActivityHandler;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
+import info.guardianproject.cacheword.PassphraseSecrets;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
@@ -71,12 +75,27 @@ public class CacheWordActivity extends Activity implements ICacheWordSubscriber 
     
     @Override
     public void onCacheWordUninitialized() {
+        // if pin is set by default at startup, this may never be called
         createPassphrase();  
     }
 
     @Override
     public void onCacheWordLocked() {
-        requestPassphrase();
+        // try to check for the first time it's locked and prompt for pin
+        SharedPreferences sp = getSharedPreferences("appPrefs", Context.MODE_PRIVATE);
+        boolean isFirstLock = sp.getBoolean("isFirstLockFlag", true);
+        if(isFirstLock) {
+            Log.d("CACHEWORD", "FIRST LOCK, CREATE PIN");
+            createPassphrase();  
+            // save flag
+            Log.d("CACHEWORD", "FIRST LOCK, SETTING FLAG");
+            SharedPreferences.Editor e = sp.edit();
+            e.putBoolean("isFirstLockFlag", false);
+            e.commit();
+        } else {
+            Log.d("CACHEWORD", "NOT FIRST LOCK, REQUEST PIN");
+            requestPassphrase();
+        }
     }
 
     @Override
@@ -137,10 +156,21 @@ public class CacheWordActivity extends Activity implements ICacheWordSubscriber 
                     mSlider.showNewPasswordField();
                 } else {
                     try {
-                        mCacheWordHandler.setPassphrase(mTextCreatePin.getText().toString().toCharArray());
-                    } catch (GeneralSecurityException e) {
-                        // TODO initialization failed
-                        Log.e("TEST", "PASSWORD CREATION FAILED: " + e.getMessage());
+                        char[] defaultPassword = "1111".toCharArray();
+                        PassphraseSecrets secrets = PassphraseSecrets.fetchSecrets(CacheWordActivity.this, defaultPassword);
+                        Log.d("CACHEWORD", "REPLACING DEFAULT PIN");
+                        mCacheWordHandler.changePassphrase(secrets, mTextCreatePin.getText().toString().toCharArray());
+                    } catch (GeneralSecurityException gse1) {
+                        Log.d("CACHEWORD", "FAILED TO GET SECRETS WITH DEFAULT PASSWORD: " + gse1.getMessage());
+                        try {
+                            Log.d("CACHEWORD", "CREATING NEW PIN");
+                            mCacheWordHandler.setPassphrase(mTextCreatePin.getText().toString().toCharArray());
+                        } catch (GeneralSecurityException gse2) {
+                            Log.e("CACHEWORD", "PIN CREATION FAILED: " + gse2.getMessage());
+                        }
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        Log.e("CACHEWORD", "UNEXPECTED EXCEPTION: " + e.getMessage());
                     }
                 }
             }
