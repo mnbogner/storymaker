@@ -78,7 +78,9 @@ public class StoryMakerApp extends Application {
 		
 		// NEW/CACHEWORD
         mCacheWordSettings = new CacheWordSettings(getApplicationContext());
-        mCacheWordSettings.setNotificationIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(this, BaseActivity.class), Intent.FLAG_ACTIVITY_NEW_TASK ));
+        // TODO - move side menu button functionality here
+        // currently the default is to lock which is sufficient
+        // mCacheWordSettings.setNotificationIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(this, BaseActivity.class), Intent.FLAG_ACTIVITY_NEW_TASK ));
 		
 		initApp();
 		 

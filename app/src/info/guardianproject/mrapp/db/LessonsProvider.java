@@ -101,27 +101,21 @@ public class LessonsProvider extends ContentProvider implements ICacheWordSubscr
 	// NEW/CACHEWORD
     @Override
     public void onCacheWordUninitialized() {
-        // lock
-        Log.d("CACHEWORD", "LessonsProvider - UNINITIALIZED/LOCK!");
+        // prevent db access while cacheword is uninitialized
         if (mDB != null)
             mDB.close();
         mDB = null;
-        Log.d("CACHEWORD", "LessonsProvider - UNINITIALIZED/LOCK! -> DONE");
     }
     @Override
     public void onCacheWordLocked() {
-        // lock
-        Log.d("CACHEWORD", "LessonsProvider - LOCKED/LOCK!");
+        // prevent db access when cacheword is locked
         if (mDB != null)
             mDB.close();
         mDB = null;
-        Log.d("CACHEWORD", "LessonsProvider - LOCKED/LOCK! -> DONE");
     }
     @Override
     public void onCacheWordOpened() {
-        // unlock
-        Log.d("CACHEWORD", "LessonsProvider - OPENED/UNLOCK!");
+        // permit db access when cacheword is unlocked
         mDB = new StoryMakerDB(mCacheWordHandler, getContext()); 
-        Log.d("CACHEWORD", "LessonsProvider - OPENED/UNLOCK! -> DONE");
     }
 }

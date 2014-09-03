@@ -251,35 +251,29 @@ public class ProjectsProvider extends ContentProvider implements ICacheWordSubsc
     // NEW/CACHEWORD
     @Override
     public void onCacheWordUninitialized() {
-        // lock
-        Log.d("CACHEWORD", "ProjectsProvider - UNINITIALIZED/LOCK!");
+        // prevent db access while cacheword is uninitialized
         if (mDBHelper != null)
             mDBHelper.close();
         if (mDB != null)
             mDB.close();
         mDBHelper = null;
         mDB = null;
-        Log.d("CACHEWORD", "ProjectsProvider - UNINITIALIZED/LOCK! -> DONE");
     }
     @Override
     public void onCacheWordLocked() {
-        // lock
-        Log.d("CACHEWORD", "ProjectsProvider - LOCKED/LOCK!");
+        // prevent db access when cacheword is locked
         if (mDBHelper != null)
             mDBHelper.close();
         if (mDB != null)
             mDB.close();
         mDBHelper = null;
         mDB = null;
-        Log.d("CACHEWORD", "ProjectsProvider - LOCKED/LOCK! -> DONE");
     }
     @Override
     public void onCacheWordOpened() {
-        // unlock
-        Log.d("CACHEWORD", "ProjectsProvider - OPENED/UNLOCK!");
+        // permit db access when cacheword is unlocked
         mDBHelper = new StoryMakerDB(mCacheWordHandler, getContext());
         mDB = mDBHelper.getWritableDatabase(mPassphrase);
-        Log.d("CACHEWORD", "ProjectsProvider - OPENED/UNLOCK! -> DONE");
     }
     
     /*

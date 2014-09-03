@@ -98,8 +98,6 @@ public class HomeActivity extends BaseActivity {
 	public void onResume() {
 		super.onResume();
 		
-		new getAsynctask().execute("");
-		
 		boolean isExternalStorageReady = ((StoryMakerApp)getApplication()).isExternalStorageReady();
 		
 		if (!isExternalStorageReady)
@@ -117,6 +115,12 @@ public class HomeActivity extends BaseActivity {
 	}
 
 
+    @Override
+    public void onCacheWordOpened() {
+        super.onCacheWordOpened();
+        
+        new getAsynctask().execute("");
+    }
 
 	class getAsynctask extends AsyncTask<String, Long, Integer> {
 
@@ -150,7 +154,8 @@ public class HomeActivity extends BaseActivity {
                 }
             }
 
-            if (mLessonsCompleted.size() == 0 && mListProjects.size() == 0) {
+            if (((mLessonsCompleted == null) || (mLessonsCompleted.size() == 0)) && 
+                ((mListProjects == null) || (mListProjects.size() == 0))) {
                 initIntroActivityList();
             } else {
                 initActivityList();

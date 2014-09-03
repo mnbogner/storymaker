@@ -9,6 +9,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 
 public abstract class Table {
     protected abstract String getTableName();
@@ -31,18 +32,29 @@ public abstract class Table {
         queryBuilder.setTables(getTableName());
         queryBuilder.appendWhere(getIDColumnName() + "=" + uri.getLastPathSegment());
         
-        Cursor cursor = queryBuilder.query(mDB, projection, selection, selectionArgs, null, null, sortOrder);
-        cursor.setNotificationUri(context.getContentResolver(), uri);
-        return cursor;
+        Cursor cursor;
+        try {
+            cursor = queryBuilder.query(mDB, projection, selection, selectionArgs, null, null, sortOrder);
+            cursor.setNotificationUri(context.getContentResolver(), uri);
+            return cursor;
+        } catch (IllegalStateException ise) {
+            Log.e(this.getClass().getName(), "queryOne() could not access database: " + ise.getMessage());
+            return null;
+        }  
     }
 
     public Cursor queryAll(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
         queryBuilder.setTables(getTableName());
         
-        Cursor cursor = queryBuilder.query(mDB, projection, selection, selectionArgs, null, null, sortOrder);
-        cursor.setNotificationUri(context.getContentResolver(), uri);
-        return cursor;
+        try {
+            Cursor cursor = queryBuilder.query(mDB, projection, selection, selectionArgs, null, null, sortOrder);
+            cursor.setNotificationUri(context.getContentResolver(), uri);
+            return cursor;
+        } catch (IllegalStateException ise) {
+            Log.e(this.getClass().getName(), "queryAll() could not access database: " + ise.getMessage());
+            return null;
+        }
     }
     
     public Cursor queryOneDistinct(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
@@ -51,9 +63,14 @@ public abstract class Table {
         queryBuilder.appendWhere(getIDColumnName() + "=" + uri.getLastPathSegment());
         queryBuilder.setDistinct(true); // "true" specifies distinct results
         
-        Cursor cursor = queryBuilder.query(mDB, projection, selection, selectionArgs, null, null, sortOrder);
-        cursor.setNotificationUri(context.getContentResolver(), uri);
-        return cursor;
+        try {
+            Cursor cursor = queryBuilder.query(mDB, projection, selection, selectionArgs, null, null, sortOrder);
+            cursor.setNotificationUri(context.getContentResolver(), uri);
+            return cursor;
+        } catch (IllegalStateException ise) {
+            Log.e(this.getClass().getName(), "queryOneDistinct() could not access database: " + ise.getMessage());
+            return null;
+        }
     }
 
     public Cursor queryAllDistinct(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
@@ -61,9 +78,14 @@ public abstract class Table {
         queryBuilder.setTables(getTableName());
         queryBuilder.setDistinct(true); // "true" specifies distinct results
         
-        Cursor cursor = queryBuilder.query(mDB, projection, selection, selectionArgs, null, null, sortOrder);
-        cursor.setNotificationUri(context.getContentResolver(), uri);
-        return cursor;
+        try {
+            Cursor cursor = queryBuilder.query(mDB, projection, selection, selectionArgs, null, null, sortOrder);
+            cursor.setNotificationUri(context.getContentResolver(), uri);
+            return cursor;
+        } catch (IllegalStateException ise) {
+            Log.e(this.getClass().getName(), "queryAllDistinct() could not access database: " + ise.getMessage());
+            return null;
+        }
     }
 
     public Uri insert(Context context, Uri uri, ContentValues values) {
@@ -129,19 +151,29 @@ public abstract class Table {
         String selection = getIDColumnName() + "=?";
         String[] selectionArgs = new String[] { "" + id };
         ContentResolver resolver = context.getContentResolver();
-        if (mDB == null) {
-            return resolver.query(getURI(), null, selection, selectionArgs, null);
-        } else {
-            return mDB.query(getTableName(), null, selection, selectionArgs, null, null, null); 
+        try {
+            if (mDB == null) {
+                return resolver.query(getURI(), null, selection, selectionArgs, null);
+            } else {
+                return mDB.query(getTableName(), null, selection, selectionArgs, null, null, null); 
+            }
+        } catch (IllegalStateException ise) {
+            Log.e(this.getClass().getName(), "getAsCursor() could not access database: " + ise.getMessage());
+            return null;
         }
     }
     
     // get result cursor for all rows
     public Cursor getAllAsCursor(Context context) {
-        if (mDB == null) {
-            return context.getContentResolver().query(getURI(), null, null, null, null);
-        } else {
-            return mDB.query(getTableName(), null, null, null, null, null, null);
+        try {
+            if (mDB == null) {
+                return context.getContentResolver().query(getURI(), null, null, null, null);
+            } else {
+                return mDB.query(getTableName(), null, null, null, null, null, null);
+            }
+        } catch (IllegalStateException ise) {
+            Log.e(this.getClass().getName(), "getAllAsCursor() could not access database: " + ise.getMessage());
+            return null;
         }
     }
 

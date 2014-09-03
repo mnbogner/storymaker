@@ -41,9 +41,18 @@ public class CacheWordActivity extends Activity implements ICacheWordSubscriber 
     
     private CacheWordActivityHandler mCacheWordHandler;
     
+    private String CACHEWORD_UNSET;
+    private String CACHEWORD_FIRST_LOCK;
+    private String CACHEWORD_SET;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        CACHEWORD_UNSET = getText(R.string.cacheword_state_unset).toString();
+        CACHEWORD_FIRST_LOCK = getText(R.string.cacheword_state_first_lock).toString();
+        CACHEWORD_SET = getText(R.string.cacheword_state_set).toString();
+        
         setContentView(R.layout.activity_lock_screen);
         
         mCacheWordHandler = new CacheWordActivityHandler(this, ((StoryMakerApp)getApplication()).getCacheWordSettings());    
@@ -75,25 +84,24 @@ public class CacheWordActivity extends Activity implements ICacheWordSubscriber 
     
     @Override
     public void onCacheWordUninitialized() {
-        // if pin is set by default at startup, this may never be called
+        // pin is now set to a default at startup, this may never be called
         createPassphrase();  
     }
 
     @Override
     public void onCacheWordLocked() {
-        // try to check for the first time it's locked and prompt for pin
+        // check for first lock status and prompt user to create a pin if necessary
         SharedPreferences sp = getSharedPreferences("appPrefs", Context.MODE_PRIVATE);
-        boolean isFirstLock = sp.getBoolean("isFirstLockFlag", true);
-        if(isFirstLock) {
-            Log.d("CACHEWORD", "FIRST LOCK, CREATE PIN");
+        String cachewordStatus = sp.getString("cacheword_status", "default");
+        if (cachewordStatus.equals(CACHEWORD_FIRST_LOCK)) {
+            Log.d("CacheWordActivity", "create new cacheword pin");
             createPassphrase();  
-            // save flag
-            Log.d("CACHEWORD", "FIRST LOCK, SETTING FLAG");
+            // set status to prevent use of default pin
             SharedPreferences.Editor e = sp.edit();
-            e.putBoolean("isFirstLockFlag", false);
+            e.putString("cacheword_status", CACHEWORD_SET);
             e.commit();
         } else {
-            Log.d("CACHEWORD", "NOT FIRST LOCK, REQUEST PIN");
+            Log.d("CacheWordActivity", "request existing cacheword pin");
             requestPassphrase();
         }
     }
@@ -156,21 +164,23 @@ public class CacheWordActivity extends Activity implements ICacheWordSubscriber 
                     mSlider.showNewPasswordField();
                 } else {
                     try {
-                        char[] defaultPassword = "1111".toCharArray();
-                        PassphraseSecrets secrets = PassphraseSecrets.fetchSecrets(CacheWordActivity.this, defaultPassword);
-                        Log.d("CACHEWORD", "REPLACING DEFAULT PIN");
+                        CharSequence defaultPinSequence = getText(R.string.cacheword_default_pin);
+                        char[] defaultPin = defaultPinSequence.toString().toCharArray();
+                        PassphraseSecrets secrets = PassphraseSecrets.fetchSecrets(CacheWordActivity.this, defaultPin);
                         mCacheWordHandler.changePassphrase(secrets, mTextCreatePin.getText().toString().toCharArray());
+                        Log.d("CacheWordActivity", "replaced default pin");
+                        // changePassphrase does not seem to trigger this so it is called manually
+                        onCacheWordOpened();
                     } catch (GeneralSecurityException gse1) {
-                        Log.d("CACHEWORD", "FAILED TO GET SECRETS WITH DEFAULT PASSWORD: " + gse1.getMessage());
+                        Log.e("CacheWordActivity", "failed to replace default pin: " + gse1.getMessage());
                         try {
-                            Log.d("CACHEWORD", "CREATING NEW PIN");
                             mCacheWordHandler.setPassphrase(mTextCreatePin.getText().toString().toCharArray());
+                            Log.d("CacheWordActivity", "created new pin (create)");
                         } catch (GeneralSecurityException gse2) {
-                            Log.e("CACHEWORD", "PIN CREATION FAILED: " + gse2.getMessage());
+                            Log.e("CacheWordActivity", "failed to create new pin (create): " + gse2.getMessage());
                         }
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        Log.e("CACHEWORD", "UNEXPECTED EXCEPTION: " + e.getMessage());
+                    } catch (IOException ioe) {
+                        Log.e("CacheWordActivity", "unexpected exception: " + ioe.getMessage() );
                     }
                 }
             }
@@ -220,10 +230,10 @@ public class CacheWordActivity extends Activity implements ICacheWordSubscriber 
                 // Check passphrase
                 try {
                     mCacheWordHandler.setPassphrase(mTextEnterPin.getText().toString().toCharArray());
-                } catch (GeneralSecurityException e) {
+                    Log.d("CacheWordActivity", "created new pin (request)");
+                } catch (GeneralSecurityException gse) {
                     mTextEnterPin.setText("");
-                    // TODO implement try again and wipe if fail
-                    Log.e("TEST", "PASSWORD CHECK FAILED: " + e.getMessage());
+                    Log.e("CacheWordActivity", "failed to create new pin (request): " + gse.getMessage());
                     return;
                 }
             }

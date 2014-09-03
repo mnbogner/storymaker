@@ -9,7 +9,9 @@ import java.util.Date;
 
 import org.holoeverywhere.app.Activity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -37,7 +39,11 @@ public class BaseActivity extends Activity implements ICacheWordSubscriber {
 		
 	// NEW/CACHEWORD
     private CacheWordActivityHandler mCacheWordHandler;
-
+    
+    private String CACHEWORD_UNSET;
+    private String CACHEWORD_FIRST_LOCK;
+    private String CACHEWORD_SET;
+    
 	@Override
 	public void onStart() {
 		super.onStart();
@@ -63,27 +69,47 @@ public class BaseActivity extends Activity implements ICacheWordSubscriber {
     }
     @Override
     public void onCacheWordUninitialized() {
-        // showLockScreen();   
-        // SET PIN BY DEFAULT, CLEAR AND PROMPT ON FIRST LOCK
+        // set default pin, prompt for actual pin on first lock
         try {
-            mCacheWordHandler.setPassphrase("1111".toCharArray());
-        } catch (GeneralSecurityException e) {
-            // TODO implement try again and wipe if fail
-            Log.e("CACHEWORD", "FAILED TO SET DEFAULT PIN: " + e.getMessage());
+            CharSequence defaultPinSequence = getText(R.string.cacheword_default_pin);
+            char[] defaultPin = defaultPinSequence.toString().toCharArray();
+            mCacheWordHandler.setPassphrase(defaultPin);
+            SharedPreferences sp = getSharedPreferences("appPrefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor e = sp.edit();
+            e.putString("cacheword_status", CACHEWORD_UNSET);
+            e.commit();
+            Log.d("BaseActivity", "set default cacheword pin");
+        } catch (GeneralSecurityException gse) {
+            Log.e("BaseActivity", "failed to set default cacheword pin: " + gse.getMessage());
         }
     }
     @Override
     public void onCacheWordLocked() {
-        showLockScreen();
-        // lock db? -> provider classes need to implement ICacheWordSubscriber and handle db
+        // if there has been no first lock and pin prompt, use default pin to unlock
+        SharedPreferences sp = getSharedPreferences("appPrefs", Context.MODE_PRIVATE);
+        String cachewordStatus = sp.getString("cacheword_status", "default");
+        if (cachewordStatus.equals(CACHEWORD_UNSET)) {
+            try {
+                CharSequence defaultPinSequence = getText(R.string.cacheword_default_pin);
+                char[] defaultPin = defaultPinSequence.toString().toCharArray();
+                mCacheWordHandler.setPassphrase(defaultPin);
+                Log.d("BaseActivity", "used default cacheword pin");
+            } catch (GeneralSecurityException gse) {
+                Log.e("BaseActivity", "failed to use default cacheword pin: " + gse.getMessage());
+            }
+        } else {
+            Log.d("BaseActivity", "prompt for cacheword pin");
+            showLockScreen();
+        }
     }
     @Override
     public void onCacheWordOpened() {
-        // unlock db? -> provider classes need to implement ICacheWordSubscriber and handle db
+        // ???
     }
     
     // NEW/CACHEWORD
     void showLockScreen() {
+        // set aside current activity and prompt for cacheword pin
         Intent intent = new Intent(this, CacheWordActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra("originalIntent", getIntent());
@@ -231,6 +257,15 @@ public class BaseActivity extends Activity implements ICacheWordSubscriber {
         btnDrawerLock.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                // if there has been no first lock, set status so user will be prompted to create a pin
+                SharedPreferences sp = getSharedPreferences("appPrefs", Context.MODE_PRIVATE);
+                String cachewordStatus = sp.getString("cacheword_status", "default");
+                if (cachewordStatus.equals(CACHEWORD_UNSET)) {
+                    SharedPreferences.Editor e = sp.edit();
+                    e.putString("cacheword_status", CACHEWORD_FIRST_LOCK);
+                    e.commit();
+                    Log.d("BaseActivity", "set cacheword first lock status");
+                }
                 mCacheWordHandler.manuallyLock();
             }
         }); 
@@ -241,10 +276,16 @@ public class BaseActivity extends Activity implements ICacheWordSubscriber {
     
     	super.onCreate(savedInstanceState);
         
+        // NEW/CACHEWORD
+        CACHEWORD_UNSET = getText(R.string.cacheword_state_unset).toString();
+        CACHEWORD_FIRST_LOCK = getText(R.string.cacheword_state_first_lock).toString();
+        CACHEWORD_SET = getText(R.string.cacheword_state_set).toString();
+    	
         (new Eula(this)).show();
-        
+
         // NEW/CACHEWORD
         mCacheWordHandler = new CacheWordActivityHandler(this, ((StoryMakerApp)getApplication()).getCacheWordSettings());
+        
     }
     
     @Override
@@ -252,7 +293,6 @@ public class BaseActivity extends Activity implements ICacheWordSubscriber {
 		
 		super.onPostCreate(savedInstanceState);
 	
-
         initSlidingMenu();
 	}
 
