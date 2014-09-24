@@ -15,6 +15,7 @@ external/RangeSeekBar/library
 external/Android-ViewPagerIndicator/library
 external/cardsui-for-android/CardsUILib
 external/SlidingMenu/library
+external/cacheword/cachewordlib
 END
 
 
@@ -26,7 +27,7 @@ cp app/libs/android-support-v4.jar external/SlidingMenu/library/libs/android-sup
 cp app/libs/android-support-v4.jar external/HoloEverywhere/contrib/ActionBarSherlock/library/libs/android-support-v4.jar
 cp app/libs/android-support-v4.jar external/Android-ViewPagerIndicator/library/libs/android-support-v4.jar
 cp app/libs/android-support-v4.jar external/RangeSeekBar/library/libs/android-support-v4.jar
-
+cp app/libs/android-support-v4.jar external/cacheword/cachewordlib/libs/android-support-v4.jar
 
 cd app
 android update project --path .
