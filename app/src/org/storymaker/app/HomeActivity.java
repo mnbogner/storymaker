@@ -129,6 +129,7 @@ public class HomeActivity extends BaseActivity {
     }
 
     // copied this as a short term fix until we get loading cleanly split out from the liger sample app ui stuff
+    // NOTE: this method appears to be unused?
     private StoryPathLibrary initSPLFromJson(String json, String jsonPath) {
         if (json == null || json.equals("")) {
             Toast.makeText(this, "Was not able to load this path, content is missing!", Toast.LENGTH_LONG).show();
@@ -148,7 +149,7 @@ public class HomeActivity extends BaseActivity {
         StoryPathLibrary storyPathLibrary = JsonHelper.deserializeStoryPathLibrary(json, jsonPath, referencedFiles, this, StoryMakerApp.getCurrentLocale().getLanguage());
 
         if ((storyPathLibrary != null) && (storyPathLibrary.getCurrentStoryPathFile() != null)) {
-            storyPathLibrary.loadStoryPathTemplate("CURRENT");
+            storyPathLibrary.loadStoryPathTemplate("CURRENT", false);
         }
 
         return storyPathLibrary;
