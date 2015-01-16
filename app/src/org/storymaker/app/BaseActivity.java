@@ -114,7 +114,7 @@ public class BaseActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
 
-                mDrawerLayout.closeDrawers();
+                mDrawerLayout.closeDrawer(mDrawerContainer);
                 
 	        	Intent i = new Intent(activity, ConnectAccountActivity.class);
 	            activity.startActivity(i);
@@ -173,7 +173,7 @@ public class BaseActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
 
-                mDrawerLayout.closeDrawers();
+                mDrawerLayout.closeDrawer(mDrawerContainer);
                 
             	 Intent i = new Intent(activity, HomeActivity.class);
                  activity.startActivity(i);
@@ -192,7 +192,7 @@ public class BaseActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
 
-                mDrawerLayout.closeDrawers();
+                mDrawerLayout.closeDrawer(mDrawerContainer);
                 Intent i = new Intent(activity, ProjectsActivity.class);
                 activity.startActivity(i);
             }
@@ -201,7 +201,7 @@ public class BaseActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
 
-                mDrawerLayout.closeDrawers();
+                mDrawerLayout.closeDrawer(mDrawerContainer);
             	
                 Intent i = new Intent(activity, LessonsActivity.class);
                 activity.startActivity(i);
@@ -221,8 +221,8 @@ public class BaseActivity extends FragmentActivity {
         btnDrawerAccounts.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                mDrawerLayout.closeDrawers();
 
+                mDrawerLayout.closeDrawer(mDrawerContainer);
                 Intent i = new Intent(activity, AccountsActivity.class);
                 activity.startActivity(i);
             }
@@ -231,7 +231,7 @@ public class BaseActivity extends FragmentActivity {
         btnDrawerUploadManager.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                mDrawerLayout.closeDrawers();
+                mDrawerLayout.closeDrawer(mDrawerContainer);
                 Toast.makeText(getApplicationContext(), "Not yet implemented", Toast.LENGTH_LONG).show();
 //                Intent i = new Intent(activity, AccountsActivity.class);
 //                activity.startActivity(i);
@@ -241,8 +241,8 @@ public class BaseActivity extends FragmentActivity {
         btnDrawerSettings.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                mDrawerLayout.closeDrawers();
 
+                mDrawerLayout.closeDrawer(mDrawerContainer);
                 Intent i = new Intent(activity, SimplePreferences.class);
                 activity.startActivity(i);
             }

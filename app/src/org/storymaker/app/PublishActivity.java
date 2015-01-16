@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,6 +37,16 @@ public class PublishActivity extends EditorBaseActivity {
         if (title == null) title = getString(R.string.no_title);
 
         ArrayList<Parcelable> parcelables = intent.getParcelableArrayListExtra(Constants.EXTRA_EXPORT_CLIPS);
+
+        // prevent potential crash
+        if (parcelables.isEmpty()) {
+            Log.e(TAG, "No exported clips, will not create a new project");
+            // need to return to liger activity
+            return;
+        } else {
+            Log.d(TAG, "Creating a new project with " + parcelables.size() + " exported clips");
+        }
+
         mProject = new Project(this, 1);
 
         // FIXME this should be split into a method, probably in the model.Project class?
