@@ -16,8 +16,10 @@ import junit.framework.Assert;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.storymaker.app.AccountsActivity;
 import org.storymaker.app.HomeActivity;
 import org.storymaker.app.R;
+import org.storymaker.app.StoryInfoEditActivity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,7 +27,9 @@ import java.util.ArrayList;
 import scal.io.liger.MainActivity;
 
 import static com.google.android.apps.common.testing.ui.espresso.Espresso.onView;
+import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.clearText;
 import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.click;
+import static com.google.android.apps.common.testing.ui.espresso.action.ViewActions.typeText;
 import static com.google.android.apps.common.testing.ui.espresso.assertion.ViewAssertions.matches;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.isDisplayed;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withId;
@@ -45,7 +49,9 @@ public class DefaultLibraryTest extends ActivityInstrumentationTestCase2<HomeAct
     private Instrumentation.ActivityMonitor mVideoActivityMonitor;
     private Instrumentation.ActivityMonitor mAudioActivityMonitor;
     private Instrumentation.ActivityMonitor mPhotoActivityMonitor;
-    private Instrumentation.ActivityMonitor mPassThroughMonitor;
+    private Instrumentation.ActivityMonitor mPassThroughMonitor1;
+    private Instrumentation.ActivityMonitor mPassThroughMonitor2;
+    private Instrumentation.ActivityMonitor mPassThroughMonitor3;
 
     private String testDirectory;
 
@@ -69,8 +75,14 @@ public class DefaultLibraryTest extends ActivityInstrumentationTestCase2<HomeAct
         String samplePhoto = testDirectory + "SAMPLE.jpg";
 
         // seems necessary to create activity monitor to prevent activity from being caught by other monitors
-        mPassThroughMonitor = new Instrumentation.ActivityMonitor(MainActivity.class.getCanonicalName(), null, false);
-        getInstrumentation().addMonitor(mPassThroughMonitor);
+        mPassThroughMonitor1 = new Instrumentation.ActivityMonitor(MainActivity.class.getCanonicalName(), null, false);
+        getInstrumentation().addMonitor(mPassThroughMonitor1);
+
+        mPassThroughMonitor2 = new Instrumentation.ActivityMonitor(AccountsActivity.class.getCanonicalName(), null, false);
+        getInstrumentation().addMonitor(mPassThroughMonitor2);
+
+        mPassThroughMonitor3 = new Instrumentation.ActivityMonitor(StoryInfoEditActivity.class.getCanonicalName(), null, false);
+        getInstrumentation().addMonitor(mPassThroughMonitor3);
 
         // create activity monitors to intercept media capture requests
         IntentFilter videoFilter = new IntentFilter(MediaStore.ACTION_VIDEO_CAPTURE);
@@ -121,24 +133,85 @@ public class DefaultLibraryTest extends ActivityInstrumentationTestCase2<HomeAct
         stall(500, "THIRD SELECTION (" + "Video" + ")");
         onView(withText("Video")).perform(click());
 
+        // media capture
+        stall(500, "MEDIA CAPTURE 1");
+        swipe(1);
+        stall(500, "WAIT FOR UPDATE");
+        onView(allOf(withText("Capture"), withParent(withParent(withTagValue(is((Object) "clip_card_0")))))).perform(click());
+
         // scroll to bottom, check for publish button
         stall(500, "SWIPING");
         swipe(15);
 
+        // begin publish/upload steps
         try {
-            stall(500, "PUBLISH BUTTON");
+            stall(500, "PUBLISH BUTTON FOUND");
             onView(allOf(withText("Publish"), withParent(withTagValue(is((Object) "publish_card_1"))))).check(matches(isDisplayed()));
             Log.d("AUTOMATION", "FOUND PUBLISH BUTTON");
+            stall(500, "PUBLISH BUTTON CLICKED");
+            onView(allOf(withText("Publish"), withParent(withTagValue(is((Object) "publish_card_1"))))).perform(click());
+            Log.d("AUTOMATION", "CLICKED PUBLISH BUTTON");
         } catch (NoMatchingViewException nmve) {
             // implies no button was found (failure)
             Log.d("AUTOMATION", "NO PUBLISH BUTTON FOUND");
             assertTrue(false);
         }
 
+        // enter metadata
+        stall(500, "METADATA");
+        onView(withId(R.id.fl_info_container)).perform(click());
+        Log.d("AUTOMATION", "CLICKED DESCRIPTION FIELD");
+        stall(500, "TITLE");
+        onView(withId(R.id.et_story_info_title)).perform(clearText()).perform(typeText("TEST TITLE"));
+        Log.d("AUTOMATION", "ENTERED TITLE TEXT");
+        stall(500, "DESCRIPTION");
+        onView(withId(R.id.et_story_info_description)).perform(clearText()).perform(typeText("TEST DESCRIPTION"));
+        Log.d("AUTOMATION", "ENTERED DESCRIPTION TEXT");
+        stall(500, "FIRST TAG");
+        onView(withId(R.id.act_story_info_tag)).perform(clearText()).perform(typeText("TAG1"));
+        stall(500, "FIRST ADD");
+        onView(withId(R.id.btn_add_tag)).perform(click());
+        Log.d("AUTOMATION", "ENTERED FIRST TAG");
+        stall(500, "SECOND TAG");
+        onView(withId(R.id.act_story_info_tag)).perform(clearText()).perform(typeText("TAG2"));
+        stall(500, "SECOND ADD");
+        onView(withId(R.id.btn_add_tag)).perform(click());
+        Log.d("AUTOMATION", "ENTERED SECOND TAG");
+        stall(500, "SECTION LIST");
+        onView(withId(R.id.sp_story_section)).perform(click());
+        stall(500, "SECTION ITEM");
+        onView(withText("Travel")).perform(click());
+        Log.d("AUTOMATION", "SELECTED SECTION");
+        stall(500, "LOCATION LIST");
+        onView(withId(R.id.sp_story_location)).perform(click());
+        stall(500, "LOCATION ITEM");
+        onView(withText("Czech Republic")).perform(click());
+        Log.d("AUTOMATION", "SELECTED LOCATION");
+        stall(500, "SAVE");
+        onView(withText("Save")).perform(click());
+        Log.d("AUTOMATION", "SAVED INFO");
+
+
+
+        // select account and upload
+        stall(500, "UPLOAD BUTTON");
+        onView(withId(R.id.btnUpload)).perform(click());
+        Log.d("AUTOMATION", "CLICKED UPLOAD BUTTON");
+        stall(500, "ACCOUNT BUTTON");
+        onView(withText("Internet Archive")).perform(click());
+        Log.d("AUTOMATION", "CLICKED ACCOUNT BUTTON");
+        stall(500, "CONTINUE BUTTON");
+        onView(withText("Continue")).perform(click());
+        Log.d("AUTOMATION", "CLICKED CONTINUE BUTTON");
+
+
+
+        // test complete
         Log.d("AUTOMATION", "testVideo() COMPLETE");
         assertTrue(true);
     }
 
+    /*
     public void testPhoto() {
         // select "new" option
         stall(500, "SELECT NEW");
@@ -208,6 +281,7 @@ public class DefaultLibraryTest extends ActivityInstrumentationTestCase2<HomeAct
         Log.d("AUTOMATION", "testVideo() COMPLETE");
         assertTrue(true);
     }
+    */
 
     private void stall(long milliseconds, String message) {
         try {
