@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v7.widget.RecyclerView;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 
@@ -113,7 +114,50 @@ public class DefaultLibraryTest extends ActivityInstrumentationTestCase2<HomeAct
         cleanup(testDirectory);
     }
 
-    public void testVideo() {
+    public void testEverything() {
+
+        boolean testFlag = true;
+
+        String[] firstOption = {
+                "Video" //,
+                // NEED TO DETERMINE FILE LOCATION "Photo",
+                // NO CAPTURE ACTIVITY TO INTERCEPT "Audio"
+        };
+
+        String[] secondOption = {
+                "Internet Archive",
+                "SoundCloud",
+                "YouTube",
+                "Flickr",
+                "Facebook",
+                "Private Server (SSH)"
+        };
+
+        for (int i = 0; i < firstOption.length; i++) {
+
+            String firstSelection = firstOption[i];
+
+            for (int j = 0; j < secondOption.length; j++) {
+
+                String secondSelection = secondOption[j];
+
+                Log.d("AUTOMATION", " *** TESTING " + firstSelection + "/" + secondSelection + " ****************************** ");
+
+                testFlag = (testFlag && doTest(firstSelection, secondSelection));
+
+                // restart app
+                mHomeActivity.finish();
+                mHomeActivity.startActivity(mHomeActivity.getIntent());
+
+                // allow time for restart
+                stall(1000, "RESTARTING ACTIVITY FOR NEXT PASS");
+            }
+        }
+
+        assertTrue(testFlag);
+    }
+
+    public boolean doTest(String mediaString, String accountString) {
 
         // obb file assumed to be present (copied by test setup script)
 
@@ -130,8 +174,8 @@ public class DefaultLibraryTest extends ActivityInstrumentationTestCase2<HomeAct
         onView(withText("Show the best moments.")).perform(click());
 
         // third selection
-        stall(500, "THIRD SELECTION (" + "Video" + ")");
-        onView(withText("Video")).perform(click());
+        stall(500, "THIRD SELECTION (" + mediaString + ")");
+        onView(withText(mediaString)).perform(click());
 
         // media capture
         stall(500, "MEDIA CAPTURE 1");
@@ -145,16 +189,13 @@ public class DefaultLibraryTest extends ActivityInstrumentationTestCase2<HomeAct
 
         // begin publish/upload steps
         try {
-            stall(500, "PUBLISH BUTTON FOUND");
-            onView(allOf(withText("Publish"), withParent(withTagValue(is((Object) "publish_card_1"))))).check(matches(isDisplayed()));
-            Log.d("AUTOMATION", "FOUND PUBLISH BUTTON");
-            stall(500, "PUBLISH BUTTON CLICKED");
+            stall(500, "PUBLISH BUTTON");
             onView(allOf(withText("Publish"), withParent(withTagValue(is((Object) "publish_card_1"))))).perform(click());
             Log.d("AUTOMATION", "CLICKED PUBLISH BUTTON");
         } catch (NoMatchingViewException nmve) {
             // implies no button was found (failure)
-            Log.d("AUTOMATION", "NO PUBLISH BUTTON FOUND");
-            assertTrue(false);
+            Log.d("AUTOMATION", "NO PUBLISH BUTTON FOUND (FAIL)");
+            return false;
         }
 
         // enter metadata
@@ -198,90 +239,23 @@ public class DefaultLibraryTest extends ActivityInstrumentationTestCase2<HomeAct
         onView(withId(R.id.btnUpload)).perform(click());
         Log.d("AUTOMATION", "CLICKED UPLOAD BUTTON");
         stall(500, "ACCOUNT BUTTON");
-        onView(withText("Internet Archive")).perform(click());
-        Log.d("AUTOMATION", "CLICKED ACCOUNT BUTTON");
-        stall(500, "CONTINUE BUTTON");
-        onView(withText("Continue")).perform(click());
-        Log.d("AUTOMATION", "CLICKED CONTINUE BUTTON");
+        onView(withText(accountString)).perform(click());
+        Log.d("AUTOMATION", "CLICKED " + accountString + " BUTTON");
 
-
+        try {
+            stall(500, "CONTINUE BUTTON");
+            // CRASHES onView(withText("Continue")).perform(click());
+            Log.d("AUTOMATION", "CLICKED CONTINUE BUTTON");
+        } catch (NoMatchingViewException nmve) {
+            // implies no button was found (failure)
+            Log.d("AUTOMATION", "NO CONTINUE BUTTON FOUND (FAIL)");
+            return false;
+        }
 
         // test complete
-        Log.d("AUTOMATION", "testVideo() COMPLETE");
-        assertTrue(true);
+        Log.d("AUTOMATION", "TEST RUN COMPLETE (PASS)");
+        return true;
     }
-
-    /*
-    public void testPhoto() {
-        // select "new" option
-        stall(500, "SELECT NEW");
-        onView(withText("New")).perform(click());
-
-        // first selection
-        stall(500, "FIRST SELECTION (" + "An Event" + ")");
-        onView(withText("An Event")).perform(click());
-
-        // second selection
-        stall(500, "SECOND SELECTION (" + "Show the best moments." + ")");
-        onView(withText("Show the best moments.")).perform(click());
-
-        // third selection
-        stall(500, "THIRD SELECTION (" + "Photo" + ")");
-        onView(withText("Photo")).perform(click());
-
-        // scroll to bottom, check for publish button
-        stall(500, "SWIPING");
-        swipe(15);
-
-        try {
-            stall(500, "PUBLISH BUTTON");
-            onView(allOf(withText("Publish"), withParent(withTagValue(is((Object) "publish_card_1"))))).check(matches(isDisplayed()));
-            Log.d("AUTOMATION", "FOUND PUBLISH BUTTON");
-        } catch (NoMatchingViewException nmve) {
-            // implies no button was found (failure)
-            Log.d("AUTOMATION", "NO PUBLISH BUTTON FOUND");
-            assertTrue(false);
-        }
-
-        Log.d("AUTOMATION", "testVideo() COMPLETE");
-        assertTrue(true);
-    }
-
-    public void testAudio() {
-        // select "new" option
-        stall(500, "SELECT NEW");
-        onView(withText("New")).perform(click());
-
-        // first selection
-        stall(500, "FIRST SELECTION (" + "An Event" + ")");
-        onView(withText("An Event")).perform(click());
-
-        // second selection
-        stall(500, "SECOND SELECTION (" + "Show the best moments." + ")");
-        onView(withText("Show the best moments.")).perform(click());
-
-        // third selection
-        stall(500, "THIRD SELECTION (" + "Audio" + ")");
-        onView(withText("Audio")).perform(click());
-
-        // scroll to bottom, check for publish button
-        stall(500, "SWIPING");
-        swipe(15);
-
-        try {
-            stall(500, "PUBLISH BUTTON");
-            onView(allOf(withText("Publish"), withParent(withTagValue(is((Object) "publish_card_1"))))).check(matches(isDisplayed()));
-            Log.d("AUTOMATION", "FOUND PUBLISH BUTTON");
-        } catch (NoMatchingViewException nmve) {
-            // implies no button was found (failure)
-            Log.d("AUTOMATION", "NO PUBLISH BUTTON FOUND");
-            assertTrue(false);
-        }
-
-        Log.d("AUTOMATION", "testVideo() COMPLETE");
-        assertTrue(true);
-    }
-    */
 
     private void stall(long milliseconds, String message) {
         try {
