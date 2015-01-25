@@ -7,11 +7,12 @@ import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.test.espresso.NoMatchingViewException;
 import android.support.v7.widget.RecyclerView;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 
-import com.google.android.apps.common.testing.ui.espresso.NoMatchingViewException;
+//import com.google.android.apps.common.testing.ui.espresso.NoMatchingViewException;
 
 import junit.framework.Assert;
 
@@ -37,6 +38,18 @@ import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMat
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withParent;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withTagValue;
 import static com.google.android.apps.common.testing.ui.espresso.matcher.ViewMatchers.withText;
+/*
+import static android.support.test.espresso.Espresso.onData;
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withParent;
+import static android.support.test.espresso.matcher.ViewMatchers.withTagValue;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+*/
+import static android.test.ViewAsserts.assertOnScreen;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
 

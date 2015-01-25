@@ -23,6 +23,15 @@ import java.util.ArrayList;
 
 import scal.io.liger.MainActivity;
 
+/*
+import static android.support.test.espresso.Espresso.onData;
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withParent;
+import static android.support.test.espresso.matcher.ViewMatchers.withTagValue;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+*/
 import static android.test.ViewAsserts.assertOnScreen;
 import static com.google.android.apps.common.testing.ui.espresso.Espresso.onData;
 import static com.google.android.apps.common.testing.ui.espresso.Espresso.onView;
