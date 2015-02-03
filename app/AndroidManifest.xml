@@ -253,6 +253,14 @@
             android:screenOrientation="portrait">
         </activity>
         <activity
+            android:name="io.scal.secureshareui.login.SMLoginActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name="io.scal.secureshareui.login.SMWebActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
             android:name="io.scal.secureshareui.login.SoundCloudLoginActivity" 
             android:theme="@style/PopupTheme"
             android:screenOrientation="portrait">

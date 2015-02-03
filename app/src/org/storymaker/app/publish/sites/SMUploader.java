@@ -10,6 +10,8 @@ import org.storymaker.app.model.Project;
 import org.storymaker.app.model.PublishJob;
 import org.storymaker.app.publish.UploaderBase;
 import org.storymaker.app.publish.WorkerBase;
+
+import java.util.Date;
 import java.util.HashMap;
 
 import io.scal.secureshareui.controller.SMSiteController;
@@ -25,27 +27,26 @@ public class SMUploader extends UploaderBase {
     @Override
     public void start() {
         Log.d(TAG, "start()");
-        
-        final SiteController controller = SiteController.getSiteController(SMSiteController.SITE_KEY, mContext, mHandler, ""+mJob.getId());
+
+        final SiteController controller = SiteController.getSiteController(SMSiteController.SITE_KEY, mContext, mHandler, "" + mJob.getId());
         final Project project = mJob.getProject();
         final PublishJob publishJob = mJob.getPublishJob();
-        final String path = publishJob.getLastRenderFilePath();
         final Auth auth = (new AuthTable()).getAuthDefault(mContext, Auth.SITE_SM);
-        if (path != null) {
-            Handler mainHandler = new Handler(mContext.getMainLooper());
-            Runnable myRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "run()");
-                 // FIXME, this might not be wise to run on the main thread, does scribe automatically run itself on a backgroundthread?
-                    HashMap<String, String> valueMap = publishJob.getMetadata();
-                    addValuesToHashmap(valueMap, project.getTitle(), project.getDescription(), path);
-                    controller.upload(auth.convertToAccountObject(), valueMap);
-                }
-            };
-            mainHandler.post(myRunnable);
-        } else {
-            Log.e(TAG, "storymaker upload failed, file path is null");
-        }
+        Handler mainHandler = new Handler(mContext.getMainLooper());
+        Runnable myRunnable = new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "run()");
+                HashMap<String, String> valueMap = publishJob.getMetadata();
+
+                // TEMP
+                Date foo = new Date();
+
+                // this method only adds title and description (as body)
+                addValuesToHashmap(valueMap, project.getTitle(), "THIS IS A TEST... " + foo.toString(), null); // HOW TO GET OR CONSTRUCT URL?
+                controller.upload(auth.convertToAccountObject(), valueMap);
+            }
+        };
+        mainHandler.post(myRunnable);
     }
 }
