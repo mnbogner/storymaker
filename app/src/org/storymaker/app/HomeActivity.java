@@ -1,7 +1,6 @@
 package org.storymaker.app;
 
 import org.apache.commons.io.FilenameUtils;
-import org.storymaker.app.lessons.LessonManager;
 import org.storymaker.app.model.Lesson;
 import org.storymaker.app.model.LessonGroup;
 import org.storymaker.app.model.Project;
@@ -244,21 +243,6 @@ public class HomeActivity extends BaseActivity {
          //indicator.setStrokeColor(0xFF000000);
          //indicator.setStrokeWidth(2 * density);
 
-
-         View button = findViewById(R.id.cardButton1);
-         button.setOnClickListener(new OnClickListener()
-         {
-
-			@Override
-			public void onClick(View v) {
-
-				Intent intent = new Intent(HomeActivity.this, LessonsActivity.class);
-				startActivity(intent);
-			}
-
-         });
-
-
     		int[] titles2 =
 			{(R.string.tutorial_title_7),
 				(R.string.tutorial_title_8),
@@ -293,7 +277,7 @@ public class HomeActivity extends BaseActivity {
          //indicator.setStrokeColor(0xFF000000);
          //indicator.setStrokeWidth(2 * density);
 
-         button = findViewById(R.id.cardButton2);
+         View button = findViewById(R.id.cardButton2);
          button.setOnClickListener(new OnClickListener()
          {
 
@@ -326,42 +310,7 @@ public class HomeActivity extends BaseActivity {
 
         startActivity(intent);
     }
-    
-    private ArrayList<Lesson> getLessonsCompleted (Context context)
-    {
-    	ArrayList<Lesson> result = new ArrayList<Lesson>();
-    	
-    	Locale locale = StoryMakerApp.getCurrentLocale();
-    	
-        LessonManager lessonManager = StoryMakerApp.getLessonManager();
-        
-    	//show lesson categories
-    	String[] lessonSections = getResources().getStringArray(R.array.lesson_sections);
-    	String[] lessonSectionsFolder = getResources().getStringArray(R.array.lesson_sections_folder);
 
-    	int idx = 0;
-    	
-    	for (String folder : lessonSections)
-    	{
-    		LessonGroup lg = new LessonGroup();
-    		lg.mTitle = folder;
-    		
-    		String subFolder = lessonSectionsFolder[idx++];
-    	
-    		ArrayList<Lesson> lessons = LessonManager.loadLessonList(context, lessonManager.getLessonRoot(), subFolder, locale.getLanguage(), Lesson.STATUS_COMPLETE);
-    		
-    		for (Lesson lesson : lessons)
-    			if (lesson.mStatus == Lesson.STATUS_COMPLETE)
-    				result.add(lesson);        		
-    			//else if (lesson.mStatus == Lesson.STATUS_IN_PROGRESS)
-    			//	result.add(lesson);        		
-			
-    	}
-    	
-    	return result;
-    	
-    }
-    
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
