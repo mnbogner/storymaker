@@ -38,19 +38,23 @@ public abstract class PublisherBase {
 
     public abstract String getResultUrl(Job job);
 
-	public String publishToStoryMaker() {
-	    Job job = getPreferredUploadJob();
+	public String publishToStoryMaker(Job job) {
+	    //Job job = getPreferredUploadJob();
 	    
 	    Project project = mPublishJob.getProject();
 	    String title = project.getTitle();
 	    String desc = project.getDescription(); 
 	    String mediaEmbed = getEmbed(job);
+
+        Log.d("PUBLISHING", "CONTENT: " + getEmbed(job));
+
 	    String[] categories = project.getCategories();
 	    String medium =  getMedium();
 	    String mediaService = job.getSite();
 	    String mediaGuid = job.getResult(); // TODO get the id from the preferred job to publish to facebook
 
 	    try {
+
             String ret = publishToStoryMaker(title, desc, mediaEmbed, categories, medium, mediaService, mediaGuid);
             return ret;
         } catch (MalformedURLException e) {
@@ -88,6 +92,7 @@ public abstract class PublisherBase {
     
     public String publishToStoryMaker(String title, String desc, String mediaEmbed, String[] categories, String medium, String mediaService, String mediaGuid) throws MalformedURLException, XmlRpcFault
     {
+
         ServerManager sm = StoryMakerApp.getServerManager();
         sm.setContext(mContext);
 
@@ -98,7 +103,11 @@ public abstract class PublisherBase {
         
         mController.publishJobProgress(mPublishJob, 0, "Publishing to StoryMaker.cc...");
         String descWithMedia = desc + "\n\n" + mediaEmbed;
+
+        // NEED TO REPLACE THIS
         String postId = sm.post(title, descWithMedia, categories, medium, mediaService, mediaGuid);
+
+
         mController.publishJobProgress(mPublishJob, 0.5f, "Publishing to StoryMaker.cc...");
         String urlPost = sm.getPostUrl(postId);
 
@@ -135,17 +144,19 @@ public abstract class PublisherBase {
             // since the user must now initiate upload, we just stop this publishjob now and wait
 //            mController.publishJobSucceeded(mPublishJob);
 		} else if (job.isType(JobTable.TYPE_UPLOAD)) {
+
 			String publishToStoryMaker = mPublishJob.getMetadata().get(SiteController.VALUE_KEY_PUBLISH_TO_STORYMAKER);
 			if (publishToStoryMaker != null && publishToStoryMaker.equals("true")) {
 				Auth auth = (new AuthTable()).getAuthDefault(mContext, Auth.SITE_STORYMAKER);
 				if (auth != null) {
-					publishToStoryMaker();
+					publishToStoryMaker(job);
 				} else {
 					mController.publishJobFailed(mPublishJob, 78268832, "You are not signed into StoryMaker.cc!"); // FIXME do this nicer!
 				}
 			} else {
                 publishSucceeded(getResultUrl(job));
 			}
+
 		}
 	}
     
